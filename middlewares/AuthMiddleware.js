@@ -1,29 +1,32 @@
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+import { InternalServerError } from "../error/error.js";
 
+dotenv.config();
 
-const JWTTOKEN = 'authToken';
-const SECRET_KEY = process.env.SECRET_KEY || "";
+const JWT_TOKEN = 'authToken';
+const SECRET_KEY = process.env.SECRET_KEY;
 
 export const authenticateJWT = (Request, Response, Next) => {
-    const token = Request.cookies[JWTTOKEN];
+    const token = Request.cookies[JWT_TOKEN];
     if (!token) {
         return Response.status(401).json({ message: 'Access denied. No token provided.' });
     }
     try {
-        const decoded = jwt.verify(token, JWT_SECRET)._id;
-        Request.body.user_id = decoded; 
-        console.log("decoded : ", decoded);
+        const decoded = jwt.verify(token, SECRET_KEY);
+        console.log("decoded : ", decoded.user_id);
+        Request.user_id = decoded?.user_id; 
         Next(); 
 
     } catch (error) {
         console.error('JWT verification failed:', error.message);
-        clearAuthCookie(Response);
+        // clearAuthCookie(Response);
         return Response.status(401).json({ message: 'Invalid or expired token.' });
     }
 };
 
 export async function clearAuthCookie(Response) {
-    Response.cookies(JWTTOKEN, '', {
+    Response.cookie(JWT_TOKEN, '', {
         httpOnly:true,
         secure:true,
         samesite:'lax',
@@ -31,15 +34,21 @@ export async function clearAuthCookie(Response) {
     })
 }
 
-export async function setAuthCookie(Response,payload){
-    const token = jwt.sign({payload},SECRET_KEY, {
+export async function setAuthCookie(Response,id){
+    const payload = {user_id: id};
+    const token = jwt.sign(payload,SECRET_KEY, {
         expiresIn: '7d'
     });
+    try {
+            Response.cookie(JWT_TOKEN, token , {
+                httpOnly:true,
+                secure:true,
+                samesite: 'lax',
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7d
+                }); 
 
-    Response.cookies(JWTTOKEN, token , {
-        httpOnly:true,
-        secure:true,
-        samesite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7d
-        }); 
+    } catch (error) {
+        console.log(error);
+        InternalServerError(Response,error)
+    }
 }

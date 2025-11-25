@@ -2,7 +2,7 @@ import { InternalServerError } from "../error/error";
 import Message from "../models/Message.js";
 export async function getMessages(Request,Response) {
     const {recipient_id} = Request.params;
-    const {user_id} = Request.body;
+    const {user_id} = Request;
     try {
         const conversationQuery = {
             $or: [
@@ -19,7 +19,8 @@ export async function getMessages(Request,Response) {
     }
 }
 export async function sendMessage(Request, Response) {
-    const {user_id, content, recipient_id } = Request.body;
+    const { content, recipient_id } = Request.body;
+    const {user_id} = Request;
     try {
         content = content?.trim();
         if(!content || !user_id || !recipient_id) {
