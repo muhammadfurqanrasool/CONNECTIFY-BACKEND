@@ -1,4 +1,4 @@
-import { InternalServerError } from "../error/error";
+import { InternalServerError } from "../error/error.js";
 import Message from "../models/Message.js";
 export async function getMessages(Request,Response) {
     const {recipient_id} = Request.params;
@@ -19,17 +19,20 @@ export async function getMessages(Request,Response) {
     }
 }
 export async function sendMessage(Request, Response) {
+    console.log("POST /api/message/send")
     const { content, recipient_id } = Request.body;
     const {user_id} = Request;
     try {
-        content = content?.trim();
+        let newContent = content?.trim();
+        console.log(newContent, user_id, recipient_id)
         if(!content || !user_id || !recipient_id) {
             return Response.status(403).json({message: "Incomplete params!"});
         }
-        const message = new Message({user_id, content, recipient_id});
+        const message = new Message({user:user_id, content:newContent, recipient:recipient_id});
         await message.save();
         Response.status(201).json(message);
     } catch (error) {
+        console.log(error)
         InternalServerError(Response,error);
     }
 }

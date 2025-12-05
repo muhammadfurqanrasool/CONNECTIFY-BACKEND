@@ -6,6 +6,7 @@ import auth from "./routes/auth.js"
 import cookieParser from 'cookie-parser';
 import profile from './routes/profile.js';
 import posts from './routes/posts.js';
+import message from './routes/message.js';
 
 
 const app = express();
@@ -51,6 +52,7 @@ app.get("/", (Request,Response)=>{
 app.use("/api/auth", auth);
 app.use("/api/profile",profile);
 app.use("/api/posts",posts);
+app.use("/api/message",message);
 
 async function callback() { 
     console.log("Listening on PORT", PORT);
